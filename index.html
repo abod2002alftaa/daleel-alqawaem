@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>دليل القوائم | البحث عن الأسماء</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:linear-gradient(135deg,#111827,#1f3b64);color:#fff;padding:24px 18px}
+.wrap{max-width:1050px;margin:auto}
+.brand{font-size:25px;font-weight:800}.sub{opacity:.8;margin-top:6px}
+.hero{background:#fff;border-radius:20px;padding:28px;margin-top:22px;box-shadow:0 8px 30px #00000010}
+h1{margin:0 0 10px;font-size:30px}.desc{color:#667085}
+.search{display:flex;gap:10px;margin-top:22px}
+input,select,button{font:inherit;border-radius:12px;padding:14px;border:1px solid #d8dee9}
+input{flex:1;font-size:17px}button{border:0;background:#2563eb;color:#fff;font-weight:700;cursor:pointer;padding-inline:24px}
+button:hover{background:#1d4ed8}
+.filters{display:flex;gap:10px;margin-top:12px}.filters select{background:#fff;min-width:190px}
+.stats{display:flex;gap:12px;margin:20px 0}.stat{background:#fff;border-radius:15px;padding:15px 18px;flex:1;box-shadow:0 5px 20px #00000008}.stat b{font-size:23px;display:block}.stat span{color:#667085;font-size:13px}
+.results{margin-top:18px}.result{background:#fff;border:1px solid #e6eaf0;border-radius:15px;padding:18px;margin-bottom:10px;display:flex;justify-content:space-between;gap:15px;align-items:center}.name{font-size:18px;font-weight:800}.meta{color:#667085;margin-top:7px;font-size:14px}.badge{background:#e8f1ff;color:#155eef;border-radius:30px;padding:8px 12px;font-size:13px;white-space:nowrap}
+.empty{text-align:center;padding:35px;color:#667085;background:#fff;border-radius:15px}
+.admin{margin-top:28px;background:#fff;border-radius:20px;padding:22px;box-shadow:0 8px 30px #00000010}.admin h2{margin-top:0}.adminrow{display:flex;gap:10px;flex-wrap:wrap}.adminrow input{min-width:180px}.notice{font-size:13px;color:#667085;margin-top:12px}
+footer{text-align:center;color:#98a2b3;padding:30px}
+@media(max-width:650px){.search,.filters{flex-direction:column}.stats{flex-direction:column}.result{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">📋 دليل القوائم</div><div class="sub">ابحث عن الاسم داخل القوائم في ثوانٍ</div></div></header>
+<main class="wrap">
+<section class="hero">
+<h1>🔎 ابحث عن اسم</h1>
+<div class="desc">اكتب الاسم أو جزءًا منه، وستظهر النتائج مباشرة.</div>
+<div class="search">
+<input id="q" placeholder="مثال: محمد علي" autocomplete="off">
+<button onclick="render()">بحث</button>
+</div>
+<div class="filters">
+<select id="listFilter" onchange="render()"><option value="">كل القوائم</option></select>
+<select id="statusFilter" onchange="render()"><option value="">كل الحالات</option><option>موجود</option><option>مقبول</option><option>مفرج عنه</option></select>
+</div>
+</section>
+
+<div class="stats">
+<div class="stat"><b id="count">0</b><span>عدد النتائج</span></div>
+<div class="stat"><b id="total">0</b><span>إجمالي الأسماء</span></div>
+</div>
+
+<section id="results" class="results"></section>
+
+<section class="admin">
+<h2>⚙️ إضافة بيانات تجريبية</h2>
+<div class="adminrow">
+<input id="newName" placeholder="الاسم">
+<input id="newId" placeholder="الرقم">
+<input id="newList" placeholder="اسم القائمة">
+<select id="newStatus"><option>موجود</option><option>مقبول</option><option>مفرج عنه</option></select>
+<button onclick="addRecord()">إضافة</button>
+</div>
+<div class="notice">هذه نسخة تجريبية تعمل داخل المتصفح. يمكن تطويرها لاحقًا بقاعدة بيانات ولوحة تحكم ورفع Excel/CSV.</div>
+</section>
+</main>
+<footer>© 2026 دليل القوائم</footer>
+
+<script>
+let data=[
+{name:"محمد علي أحمد",id:"10021",list:"قائمة الإفراجات 2026",status:"مفرج عنه"},
+{name:"أحمد سالم عمر",id:"10022",list:"قائمة الإفراجات 2026",status:"مفرج عنه"},
+{name:"علي محمد سالم",id:"10023",list:"المقبولين 2026",status:"مقبول"},
+{name:"سالم عبدالله محمد",id:"10024",list:"المقبولين 2026",status:"مقبول"},
+{name:"محمود حسن علي",id:"10025",list:"القائمة العامة",status:"موجود"}
+];
+
+const norm=s=>(s||"").toLowerCase().replace(/[أإآ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/\s+/g," ").trim();
+
+function init(){
+ const lists=[...new Set(data.map(x=>x.list))];
+ listFilter.innerHTML='<option value="">كل القوائم</option>'+lists.map(x=>`<option>${x}</option>`).join("");
+ render();
+}
+function render(){
+ const q=norm(document.getElementById("q").value), lf=listFilter.value, sf=statusFilter.value;
+ const out=data.filter(x=>(!q||norm(x.name).includes(q))&&(!lf||x.list===lf)&&(!sf||x.status===sf));
+ count.textContent=out.length; total.textContent=data.length;
+ results.innerHTML=out.length?out.map(x=>`<div class="result"><div><div class="name">${x.name}</div><div class="meta">الرقم: ${x.id} · ${x.list}</div></div><div class="badge">${x.status}</div></div>`).join(""):'<div class="empty">لم يتم العثور على اسم مطابق.</div>';
+}
+function addRecord(){
+ const name=newName.value.trim(); if(!name)return alert("اكتب الاسم أولًا");
+ data.push({name,id:newId.value.trim()||"—",list:newList.value.trim()||"القائمة العامة",status:newStatus.value});
+ newName.value=newId.value=newList.value=""; init();
+}
+q.addEventListener("input",render); init();
+</script>
+</body>
+</html>
